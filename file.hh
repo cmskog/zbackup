@@ -40,29 +40,29 @@ public:
   typedef long Offset;
 
   File( char const * filename, OpenMode )
-    throw( exCantOpen );
+    noexcept(false);
 
   File( std::string const & filename, OpenMode )
-    throw( exCantOpen );
+    noexcept(false);
 
   File( int fd, OpenMode )
-    throw( exCantOpen );
+    noexcept(false);
 
   /// Reads the number of bytes to the buffer, throws an error if it
   /// failed to fill the whole buffer (short read, i/o error etc)
-  void read( void * buf, size_t size ) throw( exReadError, exWriteError );
+  void read( void * buf, size_t size ) noexcept(false);
 
   template< typename T >
-  void read( T & value ) throw( exReadError, exWriteError )
+  void read( T & value ) noexcept(false)
   { read( &value, sizeof( value ) ); }
 
   template< typename T >
-  T read() throw( exReadError, exWriteError )
+  T read() noexcept(false)
   { T value; read( value ); return value; }
 
   /// Attempts reading at most 'count' records sized 'size'. Returns
   /// the number of records it managed to read, up to 'count'
-  size_t readRecords( void * buf, size_t size, size_t count ) throw( exWriteError );
+  size_t readRecords( void * buf, size_t size, size_t count ) noexcept(false);
 
   /// Writes the number of bytes from the buffer, throws an error if it
   /// failed to write the whole buffer (short write, i/o error etc).
@@ -70,10 +70,10 @@ public:
   /// end up on disk immediately, or a short write may occur later
   /// than it really did. If you don't want write buffering, use
   /// writeRecords() function instead
-  void write( void const * buf, size_t size ) throw( exWriteError );
+  void write( void const * buf, size_t size ) noexcept(false);
 
   template< typename T >
-  void write( T const & value ) throw( exWriteError )
+  void write( T const & value ) noexcept(false)
   { write( &value, sizeof( value ) ); }
 
   /// Attempts writing at most 'count' records sized 'size'. Returns
@@ -81,70 +81,69 @@ public:
   /// This function does not employ buffering, but flushes the buffer if it
   /// was used before
   size_t writeRecords( void const * buf, size_t size, size_t count )
-    throw( exWriteError );
+    noexcept(false);
 
   /// Reads a string from the file. Unlike the normal fgets(), this one
   /// can strip the trailing newline character, if this was requested.
   /// Returns either s or 0 if no characters were read
-  char * gets( char * s, int size, bool stripNl = false ) throw( exWriteError );
+  char * gets( char * s, int size, bool stripNl = false ) noexcept(false);
 
   /// Like the above, but uses its own local internal buffer (1024 bytes
   /// currently), and strips newlines by default
-  std::string gets( bool stripNl = true ) throw( exReadError, exWriteError );
+  std::string gets( bool stripNl = true ) noexcept(false);
 
   /// Seeks in the file, relative to its beginning
-  void seek( long offset ) throw( exSeekError, exWriteError );
+  void seek( long offset ) noexcept(false);
   /// Seeks in the file, relative to the current position
-  void seekCur( long offset ) throw( exSeekError, exWriteError );
+  void seekCur( long offset ) noexcept(false);
   /// Seeks in the file, relative to the end of file
-  void seekEnd( long offset = 0 ) throw( exSeekError, exWriteError );
+  void seekEnd( long offset = 0 ) noexcept(false);
 
   /// Seeks to the beginning of file
-  void rewind() throw( exSeekError, exWriteError );
+  void rewind() noexcept(false);
 
   /// Tells the current position within the file, relative to its beginning
-  size_t tell() throw( exSeekError );
+  size_t tell() noexcept(false);
 
   /// Returns file size
-  size_t size() throw( exSeekError, exWriteError );
+  size_t size() noexcept(false);
 
   /// Returns true if end-of-file condition is set
-  bool eof() throw( exWriteError );
+  bool eof() noexcept(false);
 
   /// Returns ferror
-  int error() throw( exReadError );
+  int error() noexcept(false);
 
   /// Returns the underlying FILE * record, so other operations can be
   /// performed on it
-  FILE * file() throw( exWriteError );
+  FILE * file() noexcept(false);
 
   /// Releases the file handle out of the control of the class. No further
   /// operations are valid. The file will not be closed on destruction
-  FILE * release() throw( exWriteError );
+  FILE * release() noexcept(false);
 
   /// Closes the file. No further operations are valid
-  void close() throw( exWriteError );
+  void close() noexcept(false);
 
   /// Checks if the file exists or not
-  static bool exists( char const * filename ) throw();
+  static bool exists( char const * filename ) noexcept;
 
-  static bool exists( std::string const & filename ) throw()
+  static bool exists( std::string const & filename ) noexcept
   { return exists( filename.c_str() ); }
 
   /// Returns false when lstat returns stat::st_mode having 
   /// S_IFREG (filename is a file, or softlink to a file, and
   /// is not a socket, fifo, device node, etc.
-  static bool special( std::string const & filename ) throw();
+  static bool special( std::string const & filename ) noexcept;
 
-  ~File() throw();
+  ~File() noexcept;
 
   /// Erases the given file
-  static void erase( std::string const & ) throw( exCantErase );
+  static void erase( std::string const & ) noexcept(false);
 
   /// Renames the given file
   static void rename( std::string const & from,
-                      std::string const & to ) throw( exCantRename,
-                                                      exCantErase );
+                      std::string const & to ) noexcept(false);
 
   /// Throwing this class instead of exReadError will make the description
   /// include the file name
@@ -155,7 +154,7 @@ public:
   public:
     exReadErrorDetailed( int fd );
     exReadErrorDetailed( FILE * f );
-    virtual const char * what() const throw();
+    virtual const char * what() const noexcept;
     virtual ~exReadErrorDetailed() throw ();
 
   private:
@@ -164,10 +163,10 @@ public:
 
 private:
 
-  void open( char const * filename, OpenMode ) throw( exCantOpen );
-  void open( int fd, OpenMode ) throw( exCantOpen );
-  void flushWriteBuffer() throw( exWriteError );
-  void releaseWriteBuffer() throw( exWriteError );
+  void open( char const * filename, OpenMode ) noexcept(false);
+  void open( int fd, OpenMode ) noexcept(false);
+  void flushWriteBuffer() noexcept(false);
+  void releaseWriteBuffer() noexcept(false);
 };
 
 #endif

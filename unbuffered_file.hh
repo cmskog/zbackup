@@ -38,26 +38,26 @@ public:
   typedef int64_t Offset;
 
   /// Opens the given file
-  UnbufferedFile( char const * fileName, Mode ) throw( exCantOpen );
+  UnbufferedFile( char const * fileName, Mode ) noexcept(false);
 
   /// Reads up to 'size' bytes into the buffer. Returns the number of bytes
   /// read. If the value returned is less than the 'size' provided, the end of
   /// file was reached
-  size_t read( void * buf, size_t size ) throw( exReadError );
+  size_t read( void * buf, size_t size ) noexcept(false);
 
   /// Writes 'size' bytes
-  void write( void const * buf, size_t size ) throw( exWriteError );
+  void write( void const * buf, size_t size ) noexcept(false);
 
   /// Returns file size
-  Offset size() throw( exSeekError );
+  Offset size() noexcept(false);
 
   /// Seeks to the given offset, relative to the current file offset
-  void seekCur( Offset ) throw( exSeekError );
+  void seekCur( Offset ) noexcept(false);
 
   /// Seeks to the given offset, relative to the beginning
-  void seek( Offset ) throw( exSeekError );
+  void seek( Offset ) noexcept(false);
 
-  ~UnbufferedFile() throw();
+  ~UnbufferedFile() noexcept;
 
 private:
   int fd;

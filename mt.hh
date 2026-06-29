@@ -74,7 +74,7 @@ public:
 
 protected:
   /// This is the function that is meant to work in a separate thread
-  virtual void * threadFunction() throw()=0;
+  virtual void * threadFunction() noexcept=0;
 
 private:
   pthread_t thread;

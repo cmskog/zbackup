@@ -19,7 +19,7 @@
 
 
 UnbufferedFile::UnbufferedFile( char const * fileName, Mode mode )
-  throw( exCantOpen )
+  noexcept(false)
 {
 
   int flags = ( mode == ReadWrite ? ( O_RDWR | O_CREAT ) :
@@ -33,7 +33,7 @@ UnbufferedFile::UnbufferedFile( char const * fileName, Mode mode )
 }
 
 size_t UnbufferedFile::read( void * buf, size_t size )
-  throw( exReadError )
+  noexcept(false)
 {
   char * next = ( char * ) buf;
   size_t left = size;
@@ -61,7 +61,7 @@ size_t UnbufferedFile::read( void * buf, size_t size )
 }
 
 void UnbufferedFile::write( void const * buf, size_t size )
-  throw( exWriteError )
+  noexcept(false)
 {
   char const * next = ( char const * ) buf;
   size_t left = size;
@@ -83,7 +83,7 @@ void UnbufferedFile::write( void const * buf, size_t size )
   }
 }
 
-UnbufferedFile::Offset UnbufferedFile::size() throw( exSeekError )
+UnbufferedFile::Offset UnbufferedFile::size() noexcept(false)
 {
   Offset cur = lseek64( fd, 0, SEEK_CUR );
   if ( cur < 0 )
@@ -94,19 +94,19 @@ UnbufferedFile::Offset UnbufferedFile::size() throw( exSeekError )
   return result;
 }
 
-void UnbufferedFile::seekCur( Offset offset ) throw( exSeekError )
+void UnbufferedFile::seekCur( Offset offset ) noexcept(false)
 {
   if ( lseek64( fd, offset, SEEK_CUR ) < 0 )
     throw exSeekError();
 }
 
-void UnbufferedFile::seek( Offset offset ) throw( exSeekError )
+void UnbufferedFile::seek( Offset offset ) noexcept(false)
 {
   if ( lseek64( fd, offset, SEEK_SET ) < 0 )
     throw exSeekError();
 }
 
-UnbufferedFile::~UnbufferedFile() throw()
+UnbufferedFile::~UnbufferedFile() noexcept
 {
   close( fd );
 }

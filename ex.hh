@@ -16,8 +16,8 @@
 #define DEF_EX( exName, exDescription, exParent ) \
 class exName: public exParent { \
 public: \
-virtual const char * what() const throw() { return (exDescription); } \
-virtual ~exName() throw() {} };
+virtual const char * what() const noexcept { return (exDescription); } \
+virtual ~exName() noexcept {} };
 
 /// Same as DEF_EX, but takes a runtime string argument, which gets concatenated
 /// with the description.
@@ -35,8 +35,8 @@ public: \
   exName( ): value( std::string( exDescription ) ) {} \
   exName( std::string const & value_ ): value( std::string( exDescription ) + " " + value_ ) {} \
   exName( char const * value_, unsigned size ): value( std::string( exDescription ) + " " + std::string( value_, size ) ) {} \
-virtual const char * what() const throw() { return value.c_str(); } \
-virtual ~exName() throw() {} };
+virtual const char * what() const noexcept { return value.c_str(); } \
+virtual ~exName() noexcept {} };
 
 /// An exception class to wrap leave code into an std::exception
 class exLeaveWrapped: public std::exception
@@ -48,7 +48,7 @@ public:
   exLeaveWrapped( int error )
   { sprintf( buf, "%d", error ); }
 
-  char const * what() const throw()
+  char const * what() const noexcept
   { return buf; }
 };
 
