@@ -1,7 +1,7 @@
 # Copyright (c) 2012-2014 Konstantin Isakov <ikm@zbackup.org> and ZBackup contributors, see CONTRIBUTORS
 # Part of ZBackup. Licensed under GNU GPLv2 or later + OpenSSL, see LICENSE
 
-cmake_minimum_required( VERSION 3.1 )
+cmake_minimum_required( VERSION 4.1 )
 project( zbackup LANGUAGES C CXX )
 
 set( CMAKE_CXX_STANDARD 11 )
