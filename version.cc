@@ -3,7 +3,7 @@
 
 #include <string>
 #ifndef ZBACKUP_VERSION
-std::string zbackup_version( "1.4" );
+#error "ZBACKUP_VERSION was not defined"
 #else
 std::string zbackup_version( ZBACKUP_VERSION );
 #endif
