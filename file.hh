@@ -155,7 +155,7 @@ public:
     exReadErrorDetailed( int fd );
     exReadErrorDetailed( FILE * f );
     virtual const char * what() const noexcept;
-    virtual ~exReadErrorDetailed() throw ();
+    virtual ~exReadErrorDetailed() noexcept;
 
   private:
     void buildDescription( int fd );

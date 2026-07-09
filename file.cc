@@ -463,6 +463,6 @@ const char * File::exReadErrorDetailed::what() const noexcept
   return description.c_str();
 }
 
-File::exReadErrorDetailed::~exReadErrorDetailed() throw ()
+File::exReadErrorDetailed::~exReadErrorDetailed() noexcept
 {
 }
