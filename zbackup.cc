@@ -8,11 +8,17 @@
 #include "version.hh"
 #include "utils.hh"
 
+constexpr int PasswordMaxLength = 1024 * 1024;
+
 DEF_EX( exSpecifyTwoKeys, "Specify password flag (--non-encrypted or --password-file)"
   " for import/export/passwd operation twice (first for source and second for destination)", std::exception )
 DEF_EX( exNonEncryptedWithKey, "--non-encrypted and --password-file are incompatible", std::exception )
 DEF_EX( exSpecifyEncryptionOptions, "Specify either --password-file or --non-encrypted", std::exception )
 DEF_EX( exSourceInaccessible, "Backup source file/directory is inaccessible", std::exception )
+DEF_EX_STR( exCantOpen, "File can't be opened: ", std::exception )
+DEF_EX_STR( exReadError, "File can't be read: ", std::exception )
+DEF_EX_STR( exPasswordTooLong, "Password too long: ", std::exception )
+DEF_EX( exPasswordEmpty, "Password file is empty", std::exception )
 
 int main( int argc, char *argv[] )
 {
@@ -37,19 +43,45 @@ int main( int argc, char *argv[] )
         if ( passwordFile )
         {
           // Read password from file/descriptor
-          std::ifstream passwordFileStream(passwordFile);
-          std::string passwordData(
-            (std::istreambuf_iterator<char>(passwordFileStream)),
-            std::istreambuf_iterator<char>());
+          std::ifstream passwordFileStream( passwordFile, std::ios::binary );
+          if ( !passwordFileStream )
+            throw exCantOpen( std::string( passwordFile ) + " Error: " + strerror( errno ) );
+
+          std::string passwordData;
+          try
+          {
+            passwordData.assign(
+              (std::istreambuf_iterator<char>(passwordFileStream)),
+              std::istreambuf_iterator<char>() );
+          }
+          catch( const std::exception & e )
+          {
+            throw std::runtime_error( std::string("Failed to read password file: ") + e.what() );
+          }
+
+          if ( passwordFileStream.bad() )
+            throw exReadError( std::string( passwordFile ) + " Error: " + strerror( errno ) );
 
           // If the password ends with \n, remove that last \n. Many editors will
-          // add \n there even if a user doesn't want them to
-          if ( !passwordData.empty() &&
-               passwordData[ passwordData.size() - 1 ] == '\n' )
-            passwordData.resize( passwordData.size() - 1 );
+          // add \n there even if a user doesn't want them to.
+          // The original implementation only handled the \n case, but if we handle that, we
+          // should probably also handle the \r\n case(Windows)
+          if ( !passwordData.empty() && passwordData.back() == '\n' )
+          {
+            passwordData.pop_back();
+            if ( !passwordData.empty() && passwordData.back() == '\r' )
+              passwordData.pop_back();
+          }
+
+          if ( passwordData.size() > PasswordMaxLength )
+            throw exPasswordTooLong(std::to_string(passwordData.size()));
+
+          if ( passwordData.size() == 0 )
+            throw exPasswordEmpty();
 
           // Store new password
           passwords.push_back( passwordData );
+          verbosePrintf( "Added password with %lu bytes\n", passwordData.size() );
         }
         ++x;
       }
