@@ -66,7 +66,7 @@ private:
 
   struct ObjectsIteratorComp
   {
-    bool operator () ( Objects::iterator const & x, Objects::iterator const & y )
+    bool operator () ( Objects::iterator const & x, Objects::iterator const & y ) const
     { return x->id < y->id; }
   };
 

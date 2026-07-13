@@ -24,7 +24,7 @@ enum
   WriteBufferSize = 65536
 };
 
-bool File::exists( char const * filename ) throw()
+bool File::exists( char const * filename ) noexcept
 {
 #ifdef __WIN32
   struct _stat buf;
@@ -37,7 +37,7 @@ bool File::exists( char const * filename ) throw()
 #endif
 }
 
-bool File::special( string const & filename ) throw()
+bool File::special( string const & filename ) noexcept
 {
   bool special = false;
 #ifndef __WIN32
@@ -56,15 +56,14 @@ bool File::special( string const & filename ) throw()
   return special;
 }
 
-void File::erase( std::string const & filename ) throw( exCantErase )
+void File::erase( std::string const & filename ) noexcept(false)
 {
   if ( remove( filename.c_str() ) != 0 )
     throw exCantErase( filename );
 }
 
 void File::rename( std::string const & from,
-                   std::string const & to ) throw( exCantRename,
-                                                   exCantErase )
+                   std::string const & to ) noexcept(false)
 {
   int res = 0;
   res = ::rename( from.c_str(), to.c_str() );
@@ -115,7 +114,7 @@ void File::rename( std::string const & from,
   }
 }
 
-void File::open( char const * filename, OpenMode mode ) throw( exCantOpen )
+void File::open( char const * filename, OpenMode mode ) noexcept(false)
 {
   char const * m;
 
@@ -137,7 +136,7 @@ void File::open( char const * filename, OpenMode mode ) throw( exCantOpen )
     throw exCantOpen( std::string( filename ) + ": " + strerror( errno ) );
 }
 
-void File::open( int fd, OpenMode mode ) throw( exCantOpen )
+void File::open( int fd, OpenMode mode ) noexcept(false)
 {
   char const * m;
 
@@ -159,25 +158,25 @@ void File::open( int fd, OpenMode mode ) throw( exCantOpen )
     throw exCantOpen( "fd#" + Utils::numberToString( fd ) + ": " + strerror( errno ) );
 }
 
-File::File( char const * filename, OpenMode mode ) throw( exCantOpen ):
+File::File( char const * filename, OpenMode mode ) noexcept(false):
   writeBuffer( 0 )
 {
   open( filename, mode );
 }
 
 File::File( std::string const & filename, OpenMode mode )
-  throw( exCantOpen ): writeBuffer( 0 )
+  noexcept(false): writeBuffer( 0 )
 {
   open( filename.c_str(), mode );
 }
 
 File::File( int fd, OpenMode mode )
-  throw( exCantOpen ): writeBuffer( 0 )
+  noexcept(false): writeBuffer( 0 )
 {
   open( fd, mode );
 }
 
-void File::read( void * buf, size_t size ) throw( exReadError, exWriteError )
+void File::read( void * buf, size_t size ) noexcept(false)
 {
   if ( !size )
     return;
@@ -196,7 +195,7 @@ void File::read( void * buf, size_t size ) throw( exReadError, exWriteError )
   }
 }
 
-size_t File::readRecords( void * buf, size_t size, size_t count ) throw( exWriteError )
+size_t File::readRecords( void * buf, size_t size, size_t count ) noexcept(false)
 {
   if ( writeBuffer )
     flushWriteBuffer();
@@ -204,7 +203,7 @@ size_t File::readRecords( void * buf, size_t size, size_t count ) throw( exWrite
   return fread( buf, size, count, f );
 }
 
-void File::write( void const * buf, size_t size ) throw( exWriteError )
+void File::write( void const * buf, size_t size ) noexcept(false)
 {
   if ( !size )
     return;
@@ -250,7 +249,7 @@ void File::write( void const * buf, size_t size ) throw( exWriteError )
 }
 
 size_t File::writeRecords( void const * buf, size_t size, size_t count )
-  throw( exWriteError )
+  noexcept(false)
 {
   flushWriteBuffer();
 
@@ -258,7 +257,7 @@ size_t File::writeRecords( void const * buf, size_t size, size_t count )
 }
 
 char * File::gets( char * s, int size, bool stripNl )
-  throw( exWriteError )
+  noexcept(false)
 {
   if ( writeBuffer )
     flushWriteBuffer();
@@ -285,7 +284,7 @@ char * File::gets( char * s, int size, bool stripNl )
   return result;
 }
 
-std::string File::gets( bool stripNl ) throw( exReadError, exWriteError )
+std::string File::gets( bool stripNl ) noexcept(false)
 {
   char buf[ 1024 ];
 
@@ -300,7 +299,7 @@ std::string File::gets( bool stripNl ) throw( exReadError, exWriteError )
   return std::string( buf );
 }
 
-void File::seek( long offset ) throw( exSeekError, exWriteError )
+void File::seek( long offset ) noexcept(false)
 {
   if ( writeBuffer )
     flushWriteBuffer();
@@ -309,7 +308,7 @@ void File::seek( long offset ) throw( exSeekError, exWriteError )
     throw exSeekError();
 }
 
-void File::seekCur( long offset ) throw( exSeekError, exWriteError )
+void File::seekCur( long offset ) noexcept(false)
 {
   if ( writeBuffer )
     flushWriteBuffer();
@@ -318,7 +317,7 @@ void File::seekCur( long offset ) throw( exSeekError, exWriteError )
     throw exSeekError();
 }
 
-void File::seekEnd( long offset ) throw( exSeekError, exWriteError )
+void File::seekEnd( long offset ) noexcept(false)
 {
   if ( writeBuffer )
     flushWriteBuffer();
@@ -327,12 +326,12 @@ void File::seekEnd( long offset ) throw( exSeekError, exWriteError )
     throw exSeekError();
 }
 
-void File::rewind() throw( exSeekError, exWriteError )
+void File::rewind() noexcept(false)
 {
   seek( 0 );
 }
 
-size_t File::tell() throw( exSeekError )
+size_t File::tell() noexcept(false)
 {
   long result = ftell( f );
 
@@ -345,7 +344,7 @@ size_t File::tell() throw( exSeekError )
   return ( size_t ) result;
 }
 
-size_t File::size() throw( exSeekError, exWriteError )
+size_t File::size() noexcept(false)
 {
   size_t cur = tell();
   seekEnd( 0 );
@@ -355,7 +354,7 @@ size_t File::size() throw( exSeekError, exWriteError )
   return result;
 }
 
-bool File::eof() throw( exWriteError )
+bool File::eof() noexcept(false)
 {
   if ( writeBuffer )
     flushWriteBuffer();
@@ -363,21 +362,21 @@ bool File::eof() throw( exWriteError )
   return feof( f );
 }
 
-int File::error() throw( exReadError )
+int File::error() noexcept(false)
 {
   int result = ferror( f );
 
   return result;
 }
 
-FILE * File::file() throw( exWriteError )
+FILE * File::file() noexcept(false)
 {
   flushWriteBuffer();
 
   return f;
 }
 
-FILE * File::release() throw( exWriteError )
+FILE * File::release() noexcept(false)
 {
   releaseWriteBuffer();
 
@@ -388,12 +387,12 @@ FILE * File::release() throw( exWriteError )
   return c;
 }
 
-void File::close() throw( exWriteError )
+void File::close() noexcept(false)
 {
   fclose( release() );
 }
 
-File::~File() throw()
+File::~File() noexcept
 {
   if ( f )
   {
@@ -408,7 +407,7 @@ File::~File() throw()
   }
 }
 
-void File::flushWriteBuffer() throw( exWriteError )
+void File::flushWriteBuffer() noexcept(false)
 {
   if ( writeBuffer && writeBufferLeft != WriteBufferSize )
   {
@@ -421,7 +420,7 @@ void File::flushWriteBuffer() throw( exWriteError )
   }
 }
 
-void File::releaseWriteBuffer() throw( exWriteError )
+void File::releaseWriteBuffer() noexcept(false)
 {
   flushWriteBuffer();
 
@@ -459,11 +458,11 @@ void File::exReadErrorDetailed::buildDescription( int fd )
     description.append( path, pathChars );
 }
 
-const char * File::exReadErrorDetailed::what() const throw()
+const char * File::exReadErrorDetailed::what() const noexcept
 {
   return description.c_str();
 }
 
-File::exReadErrorDetailed::~exReadErrorDetailed() throw ()
+File::exReadErrorDetailed::~exReadErrorDetailed() noexcept
 {
 }

@@ -1,16 +1,24 @@
 // Copyright (c) 2012-2014 Konstantin Isakov <ikm@zbackup.org> and ZBackup contributors, see CONTRIBUTORS
 // Part of ZBackup. Licensed under GNU GPLv2 or later + OpenSSL, see LICENSE
 
+#include <fstream>
+#include <streambuf>
 #include "zutils.hh"
 #include "debug.hh"
 #include "version.hh"
 #include "utils.hh"
+
+constexpr int PasswordMaxLength = 1024 * 1024;
 
 DEF_EX( exSpecifyTwoKeys, "Specify password flag (--non-encrypted or --password-file)"
   " for import/export/passwd operation twice (first for source and second for destination)", std::exception )
 DEF_EX( exNonEncryptedWithKey, "--non-encrypted and --password-file are incompatible", std::exception )
 DEF_EX( exSpecifyEncryptionOptions, "Specify either --password-file or --non-encrypted", std::exception )
 DEF_EX( exSourceInaccessible, "Backup source file/directory is inaccessible", std::exception )
+DEF_EX_STR( exCantOpen, "File can't be opened: ", std::exception )
+DEF_EX_STR( exReadError, "File can't be read: ", std::exception )
+DEF_EX_STR( exPasswordTooLong, "Password too long: ", std::exception )
+DEF_EX( exPasswordEmpty, "Password file is empty", std::exception )
 
 int main( int argc, char *argv[] )
 {
@@ -32,19 +40,48 @@ int main( int argc, char *argv[] )
       {
         // Read the password
         char const * passwordFile = argv[ x + 1 ];
-        string passwordData;
         if ( passwordFile )
         {
-          File f( passwordFile, File::ReadOnly );
-          passwordData.resize( f.size() );
-          f.read( &passwordData[ 0 ], passwordData.size() );
+          // Read password from file/descriptor
+          std::ifstream passwordFileStream( passwordFile, std::ios::binary );
+          if ( !passwordFileStream )
+            throw exCantOpen( std::string( passwordFile ) + " Error: " + strerror( errno ) );
+
+          std::string passwordData;
+          try
+          {
+            passwordData.assign(
+              (std::istreambuf_iterator<char>(passwordFileStream)),
+              std::istreambuf_iterator<char>() );
+          }
+          catch( const std::exception & e )
+          {
+            throw std::runtime_error( std::string("Failed to read password file: ") + e.what() );
+          }
+
+          if ( passwordFileStream.bad() )
+            throw exReadError( std::string( passwordFile ) + " Error: " + strerror( errno ) );
 
           // If the password ends with \n, remove that last \n. Many editors will
-          // add \n there even if a user doesn't want them to
-          if ( !passwordData.empty() &&
-               passwordData[ passwordData.size() - 1 ] == '\n' )
-            passwordData.resize( passwordData.size() - 1 );
+          // add \n there even if a user doesn't want them to.
+          // The original implementation only handled the \n case, but if we handle that, we
+          // should probably also handle the \r\n case(Windows)
+          if ( !passwordData.empty() && passwordData.back() == '\n' )
+          {
+            passwordData.pop_back();
+            if ( !passwordData.empty() && passwordData.back() == '\r' )
+              passwordData.pop_back();
+          }
+
+          if ( passwordData.size() > PasswordMaxLength )
+            throw exPasswordTooLong(std::to_string(passwordData.size()));
+
+          if ( passwordData.size() == 0 )
+            throw exPasswordEmpty();
+
+          // Store new password
           passwords.push_back( passwordData );
+          verbosePrintf( "Added password with %lu bytes\n", passwordData.size() );
         }
         ++x;
       }
@@ -173,8 +210,10 @@ invalid_option:
 "    restore <backup file name> - restores a backup to stdout\n"
 "    restore <backup file name> <output file name> - restores\n"
 "            a backup to file using two-pass \"cacheless\" process\n"
+#ifdef WITH_BUSE
 "    nbd <backup file name> /dev/nbd0\n"
 "            start NBD server that will serve backup data as block device\n"
+#endif
 "    export <source storage path> <destination storage path> -\n"
 "            performs export from source to destination storage\n"
 "    import <source storage path> <destination storage path> -\n"
@@ -280,6 +319,7 @@ invalid_option:
         zr.restoreToStdin( args[ 1 ] );
     }
     else
+#ifdef WITH_BUSE
     if ( strcmp( args[ 0 ], "nbd" ) == 0 )
     {
       // Start NBD server
@@ -294,6 +334,7 @@ invalid_option:
       zr.startNBDServer( args[ 1 ], args[ 2 ] );
     }
     else
+#endif
     if ( strcmp( args[ 0 ], "export" ) == 0 || strcmp( args[ 0 ], "import" ) == 0 )
     {
       if ( args.size() != 3 )

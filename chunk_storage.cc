@@ -168,7 +168,7 @@ Writer::Compressor::Compressor( Config const & configIn, Writer & writer,
 {
 }
 
-void * Writer::Compressor::Compressor::threadFunction() throw()
+void * Writer::Compressor::Compressor::threadFunction() noexcept
 {
   try
   {

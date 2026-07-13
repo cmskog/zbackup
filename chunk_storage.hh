@@ -73,7 +73,7 @@ private:
     Compressor( Config const &, Writer &, sptr< Bundle::Creator > const &,
                 string const & fileName );
   protected:
-    virtual void * threadFunction() throw();
+    virtual void * threadFunction() noexcept;
   };
 
   friend class Compressor;
